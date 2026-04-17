@@ -82,13 +82,19 @@
             animation: gradientShift 3s ease infinite;
         }
 
-        button:hover, button:focus {
+        button:hover:not(:disabled), button:focus:not(:disabled) {
             transform: scale(1.05);
             outline: none;
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: scale(0.95);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            animation: none;
         }
 
         .btn-start { background-image: var(--btn-success-grad); }
@@ -238,6 +244,13 @@
             </button>
         </div>
 
+        <div style="display: flex; justify-content: center; margin-bottom: 15px; gap: 10px;">
+            <input type="number" id="manualInput" placeholder="أو إدخال يدوي..." style="padding: 10px; border-radius: 8px; border: 1px solid #81D4FA; font-size: 16px; width: 150px; text-align: center; color: #01579B;" onkeypress="if(event.key === 'Enter') addManualNumber()">
+            <button onclick="addManualNumber()" style="padding: 10px 15px; font-size: 16px; background-image: var(--btn-success-grad); border-radius: 8px;">إضافة</button>
+        </div>
+
+        <div id="errorBox" style="display: none; background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; border: 2px solid #ef9a9a; margin-bottom: 15px; text-align: center; font-weight: bold; line-height: 1.6; font-size: 16px;"></div>
+
         <div id="statusMessage"></div>
 
         <div class="spreadsheet-wrapper">
@@ -287,28 +300,37 @@
             };
 
             recognition.onerror = function(event) {
-                console.error("Speech error: ", event.error);
-                if (event.error === 'not-allowed') {
-                    showStatus("الرجاء السماح باستخدام الميكروفون.", "red");
+                console.warn("حالة الميكروفون:", event.error);
+                
+                // سنتوقف تماماً فقط إذا تم سحب صلاحية الميكروفون
+                if (event.error === 'not-allowed' || event.error === 'security') {
+                    showErrorBox("⚠️ تم حظر الميكروفون.<br>الرجاء إعطاء صلاحية الميكروفون للمتصفح.");
                     stopListening();
                 } else if (event.error === 'network') {
-                    // Chrome's Speech Recognition usually requires an active internet connection
-                    showStatus("خطأ في الشبكة. يحتاج التعرف على الصوت إلى اتصال بالإنترنت.", "red");
-                    stopListening(); // Stop the loop to prevent infinite retries
-                } else if (event.error !== 'no-speech') {
-                    stopListening();
+                    if (window.self !== window.top) {
+                        showErrorBox("⚠️ نافذة المعاينة تمنع الميكروفون لأسباب أمنية.<br><span style='color:#b71c1c;'>الحل: احفظ الكود كملف (index.html) وافتحه في Chrome.</span>");
+                        stopListening();
+                    }
+                    // إذا كان خطأ شبكة عادي (يحدث كثيراً في الكروم عند الصمت)، سنتجاهله وندع الكود يعيد التشغيل
                 }
+                // تم إزالة الأوامر التي توقف الميكروفون عند أخطاء no-speech وغيرها 
+                // لكي نجعل التطبيق عنيداً ويستمر في المحاولة
             };
 
             recognition.onend = function() {
-                // Automatically restart if we didn't explicitly stop it (handles pauses)
+                // إعادة التشغيل التلقائي الإجباري
                 if (isListening) {
-                    try {
-                        recognition.start();
-                    } catch(e) {
-                        isListening = false;
-                        updateUI();
-                    }
+                    // استخدام تأخير زمني بسيط (400ms) يمنع المتصفح من الانهيار ويضمن نجاح إعادة التشغيل
+                    setTimeout(() => {
+                        try {
+                            if (isListening) {
+                                recognition.start();
+                                console.log("تمت إعادة تشغيل الميكروفون تلقائياً...");
+                            }
+                        } catch(e) {
+                            console.error("فشل إعادة التشغيل", e);
+                        }
+                    }, 400); 
                 } else {
                     updateUI();
                 }
@@ -352,6 +374,16 @@
             }
         }
 
+        function addManualNumber() {
+            const inputEl = document.getElementById('manualInput');
+            const val = inputEl.value.trim();
+            if (val !== '') {
+                addNumber(val);
+                inputEl.value = '';
+                inputEl.focus();
+            }
+        }
+
         function addNumber(numberStr) {
             numbersData.push(numberStr);
             
@@ -390,6 +422,13 @@
             }
             showStatus("تم الإيقاف.", "#0288D1");
             updateUI();
+        }
+
+        function showErrorBox(msg) {
+            const box = document.getElementById('errorBox');
+            box.innerHTML = msg;
+            box.style.display = 'block';
+            document.getElementById('statusMessage').style.display = 'none'; // إخفاء الرسالة العادية
         }
 
         function updateUI() {
@@ -450,6 +489,8 @@
             statusEl.textContent = message;
             statusEl.style.color = color;
             statusEl.style.opacity = 1;
+            statusEl.style.display = 'block'; // التأكد من ظهوره
+            document.getElementById('errorBox').style.display = 'none'; // إخفاء صندوق الخطأ عند وجود رسالة عادية
 
             clearTimeout(window.statusTimeout);
             window.statusTimeout = setTimeout(() => {
@@ -457,9 +498,16 @@
             }, 4000);
         }
 
-        // Initialize empty state
+        // Initialize empty state and check for iframe
         window.onload = function() {
-            showStatus("جاهز للبدء.", "#0288D1");
+            if (window.self !== window.top) {
+                // If running inside the preview iframe, disable mic and show instruction
+                const toggleBtn = document.getElementById('toggleBtn');
+                toggleBtn.disabled = true;
+                showErrorBox("⚠️ <b>تنبيه هام:</b> المتصفح يمنع استخدام الميكروفون داخل شاشة المعاينة هذه.<br><br>للتشغيل: قم بنسخ هذا الكود، واحفظه في ملف باسم <code>index.html</code> على جهازك، ثم افتحه بمتصفح Chrome لكي يعمل الإملاء الصوتي.");
+            } else {
+                showStatus("جاهز للبدء.", "#0288D1");
+            }
         };
     </script>
 </body>
