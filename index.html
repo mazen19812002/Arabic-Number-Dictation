@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arabic Number Dictation</title>
+    <style>
+        /* Base Styling & Light Blue Theme */
+        :root {
+            --bg-light-blue: #E1F5FE;
+            --text-dark: #01579B;
+            --btn-success-grad: linear-gradient(45deg, #0288D1, #43A047, #0288D1);
+            --btn-danger-grad: linear-gradient(45deg, #D32F2F, #E53935, #D32F2F);
+            --btn-copy-grad: linear-gradient(45deg, #1976D2, #8E24AA, #1976D2);
+            --footer-grad: linear-gradient(90deg, #0288D1, #4CAF50, #0288D1, #4CAF50);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light-blue);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation; /* Optimizes touch interactions */
+        }
+
+        /* Typography */
+        h1 {
+            font-weight: 300; /* Thin heading */
+            text-align: center;
+            margin: 10px 0 5px 0;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0277BD;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Controls / Buttons */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 15px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        button:hover, button:focus {
+            transform: scale(1.05);
+            outline: none;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-start { background-image: var(--btn-success-grad); }
+        .btn-start.listening { background-image: var(--btn-danger-grad); animation: pulse 1.5s infinite; }
+        .btn-copy { background-image: var(--btn-copy-grad); }
+        .btn-clear { background-image: var(--btn-danger-grad); }
+
+        .btn-icon { font-size: 22px; display: inline-block; }
+        .listening .btn-icon { animation: float 1s ease-in-out infinite alternate; }
+
+        /* Spreadsheet Area */
+        .spreadsheet-wrapper {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #B3E5FC;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 10px;
+        }
+
+        .spreadsheet-header {
+            background-color: #E1F5FE;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+            border-bottom: 2px solid #81D4FA;
+        }
+
+        .data-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            scroll-behavior: smooth;
+        }
+
+        .data-row {
+            padding: 12px 20px;
+            border-bottom: 1px solid #E1F5FE;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #01579B;
+            animation: slideIn 0.3s ease-out forwards;
+            background: #ffffff;
+            transition: background 0.2s;
+        }
+
+        .data-row:hover {
+            background: #F1F8E9;
+        }
+
+        .data-row:nth-child(even) {
+            background: #FAFAFA;
+        }
+
+        .data-row:nth-child(even):hover {
+            background: #F1F8E9;
+        }
+
+        /* Status Text */
+        #statusMessage {
+            text-align: center;
+            height: 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #4CAF50;
+            transition: opacity 0.3s;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--footer-grad);
+            background-size: 300% 100%;
+            animation: scrollGradient 8s linear infinite;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes scrollGradient {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 0%; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(211, 47, 47, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            from { transform: translateY(-2px); }
+            to { transform: translateY(2px); }
+        }
+
+        /* Scrollbar styling for Webkit */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #E1F5FE; }
+        ::-webkit-scrollbar-thumb { background: #81D4FA; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0288D1; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>إملاء الأرقام العربية</h1>
+        <div class="subtitle">جاهز للنسخ إلى Excel</div>
+
+        <div class="controls">
+            <button class="btn-start" id="toggleBtn" onclick="toggleListening()">
+                <span class="btn-icon" id="micIcon">🎙️</span> 
+                <span id="btnText">بدء الإملاء</span>
+            </button>
+            
+            <button class="btn-copy" onclick="copyToExcel()">
+                <span class="btn-icon">📋</span> نسخ لـ Excel
+            </button>
+            
+            <button class="btn-clear" onclick="clearData()">
+                <span class="btn-icon">🗑️</span> مسح
+            </button>
+        </div>
+
+        <div id="statusMessage"></div>
+
+        <div class="spreadsheet-wrapper">
+            <div class="spreadsheet-header">عمود الأرقام</div>
+            <ul class="data-list" id="numberColumn">
+                <!-- Numbers will appear here -->
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        All rights are reserved to Dr. Mazen Badawy – Doctor of English Teaching & Testing
+    </footer>
+
+    <script>
+        // Data storage
+        let numbersData = [];
+        let isListening = false;
+        let recognition = null;
+
+        // Initialize Speech Recognition
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                showStatus("متصفحك لا يدعم التعرف على الصوت. يرجى استخدام Chrome.", "red");
+                return false;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA'; // Arabic Language
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isListening = true;
+                updateUI();
+                showStatus("يستمع الآن... قل الأرقام", "#4CAF50");
+            };
+
+            recognition.onresult = function(event) {
+                // Get the latest result
+                const current = event.resultIndex;
+                const transcript = event.results[current][0].transcript.trim();
+                
+                processTranscript(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech error: ", event.error);
+                if (event.error === 'not-allowed') {
+                    showStatus("الرجاء السماح باستخدام الميكروفون.", "red");
+                    stopListening();
+                }
+            };
+
+            recognition.onend = function() {
+                // Automatically restart if we didn't explicitly stop it (handles pauses)
+                if (isListening) {
+                    try {
+                        recognition.start();
+                    } catch(e) {
+                        isListening = false;
+                        updateUI();
+                    }
+                } else {
+                    updateUI();
+                }
+            };
+
+            return true;
+        }
+
+        // Convert spoken text and Eastern Arabic digits to standard Western digits
+        function processTranscript(text) {
+            // 1. Convert Eastern Arabic numerals (١, ٢, ٣) to Standard (1, 2, 3)
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            let processedText = text.replace(/[٠-٩]/g, function(w) {
+                return arabicNumbers.indexOf(w).toString();
+            });
+
+            // 2. Map common Arabic number words to digits (Fallback)
+            const wordMap = {
+                'صفر': '0', 'واحد': '1', 'اثنين': '2', 'اثنان': '2', 'تلاته': '3', 'ثلاثة': '3', 
+                'اربعة': '4', 'أربعة': '4', 'خمسة': '5', 'ستة': '6', 'سبعة': '7', 'ثمانية': '8', 
+                'تمانية': '8', 'تسعة': '9', 'عشرة': '10'
+            };
+
+            // Replace full words if they exist standalone
+            let words = processedText.split(/\s+/);
+            for (let i = 0; i < words.length; i++) {
+                if (wordMap[words[i]]) {
+                    words[i] = wordMap[words[i]];
+                }
+            }
+            processedText = words.join(' ');
+
+            // 3. Extract ONLY digits to ensure clean spreadsheet data
+            const numericMatches = processedText.match(/\d+/g);
+            
+            if (numericMatches) {
+                numericMatches.forEach(num => {
+                    addNumber(num);
+                });
+            }
+        }
+
+        function addNumber(numberStr) {
+            numbersData.push(numberStr);
+            
+            const list = document.getElementById('numberColumn');
+            const li = document.createElement('li');
+            li.className = 'data-row';
+            li.textContent = numberStr;
+            list.appendChild(li);
+
+            // Auto scroll to bottom
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function toggleListening() {
+            if (!recognition && !initSpeechRecognition()) return;
+
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            try {
+                recognition.start();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            if (recognition) {
+                recognition.stop();
+            }
+            showStatus("تم الإيقاف.", "#0288D1");
+            updateUI();
+        }
+
+        function updateUI() {
+            const btn = document.getElementById('toggleBtn');
+            const text = document.getElementById('btnText');
+            const icon = document.getElementById('micIcon');
+
+            if (isListening) {
+                btn.classList.add('listening');
+                text.textContent = "إيقاف الإملاء";
+                icon.textContent = "⏹️";
+            } else {
+                btn.classList.remove('listening');
+                text.textContent = "بدء الإملاء";
+                icon.textContent = "🎙️";
+            }
+        }
+
+        function clearData() {
+            numbersData = [];
+            document.getElementById('numberColumn').innerHTML = '';
+            showStatus("تم مسح البيانات.", "#D32F2F");
+        }
+
+        function copyToExcel() {
+            if (numbersData.length === 0) {
+                showStatus("لا توجد بيانات للنسخ!", "red");
+                return;
+            }
+
+            // Join with newline character for Excel columns
+            const excelData = numbersData.join('\n');
+
+            // Fallback copy method for broad compatibility (especially in iframes)
+            const textArea = document.createElement("textarea");
+            textArea.value = excelData;
+            textArea.style.position = "fixed";  // Avoid scrolling
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showStatus("✅ تم النسخ بنجاح! يمكنك الآن اللصق في Excel.", "#4CAF50");
+                } else {
+                    showStatus("❌ فشل النسخ.", "red");
+                }
+            } catch (err) {
+                showStatus("❌ خطأ في النسخ.", "red");
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        function showStatus(message, color) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.style.color = color;
+            statusEl.style.opacity = 1;
+
+            clearTimeout(window.statusTimeout);
+            window.statusTimeout = setTimeout(() => {
+                statusEl.style.opacity = 0;
+            }, 4000);
+        }
+
+        // Initialize empty state
+        window.onload = function() {
+            showStatus("جاهز للبدء.", "#0288D1");
+        };
+    </script>
+</body>
+</html>
