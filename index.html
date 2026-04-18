@@ -9,8 +9,8 @@
     <style>
         /* Base Styling & Light Blue Theme */
         :root {
-            --row-font-size: 28px;
-            --row-padding: 12px;
+            --row-font-size: 24px;
+            --row-padding: 10px;
             --bg-light-blue: #E1F5FE;
             --text-dark: #01579B;
             --btn-success-grad: linear-gradient(45deg, #0288D1, #43A047, #0288D1);
@@ -56,7 +56,7 @@
             flex-direction: column;
             flex: 1;
             padding: 5px 20px 10px 20px;
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
@@ -83,7 +83,7 @@
         }
 
         .spreadsheet-panel {
-            flex: 2;
+            flex: 2.5;
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -248,97 +248,9 @@
             z-index: 10;
         }
 
-        /* Normal Data List (Mode 1) */
-        .data-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            scroll-behavior: smooth;
-        }
-
-        .data-row {
-            padding: var(--row-padding) 20px;
-            border-bottom: 1px solid #E1F5FE;
-            animation: slideIn 0.2s ease-out forwards;
-            background: #ffffff;
-            transition: background 0.2s, padding 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .row-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-        }
-
-        .row-index {
-            background: #EEEEEE;
-            color: #757575;
-            font-size: calc(var(--row-font-size) * 0.55);
-            font-weight: bold;
-            padding: 5px 12px;
-            border-radius: 6px;
-            min-width: 25px;
-            text-align: center;
-            border: 1px solid #E0E0E0;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-            transition: font-size 0.2s;
-        }
-
-        .row-value {
-            font-size: var(--row-font-size);
-            font-weight: bold;
-            color: #01579B;
-            transition: all 0.3s;
-            flex: 1;
-            min-height: calc(var(--row-font-size) * 1.5);
-            display: flex;
-            align-items: center;
-        }
-
-        .btn-delete-row {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            animation: none !important;
-            color: #D32F2F;
-            font-size: calc(var(--row-font-size) * 0.8) !important;
-            cursor: pointer;
-            width: 45px !important;
-            height: 45px !important;
-            padding: 0 !important;
-            border-radius: 50% !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s, background 0.2s, font-size 0.2s;
-        }
-        .btn-delete-row:hover { background: #FFEBEE !important; transform: scale(1.15) !important; }
-
-        .data-row:hover { background: #F1F8E9; }
-        .data-row:nth-child(even) { background: #FAFAFA; }
-        .data-row:nth-child(even):hover { background: #F1F8E9; }
-
-        /* Highlighted Last Record (List Mode) */
-        .highlight-row {
-            background-color: #FFF59D !important;
-            border-right: 8px solid #FF8F00;
-            transform: scale(1.02);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 2;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .highlight-row .row-value { color: #D84315; font-size: calc(var(--row-font-size) * 1.15); }
-
-        /* Excel Preview Grid (Mode 2) */
+        /* Excel Preview Grid */
         .excel-preview-container {
-            display: none; 
+            display: block; 
             flex: 1;
             overflow: auto;
             background: #FAFAFA;
@@ -363,6 +275,7 @@
             z-index: 5;
             font-weight: bold;
             font-size: 16px;
+            user-select: none;
         }
 
         .excel-preview-table th:first-child {
@@ -382,7 +295,7 @@
             font-size: calc(var(--row-font-size) * 0.7);
             font-weight: bold;
             color: #01579B;
-            cursor: text; /* Change to text cursor for direct entry */
+            cursor: text; 
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -403,6 +316,57 @@
             box-shadow: inset 0 0 8px rgba(255, 143, 0, 0.4);
             position: relative;
         }
+
+        /* --- Insert Row/Col Buttons (Word Style) --- */
+        .insert-btn {
+            position: absolute;
+            background: #0288D1;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: transform 0.2s, background 0.2s, opacity 0.2s;
+            z-index: 20;
+            opacity: 0; /* مخفي تماماً بشكل افتراضي */
+            pointer-events: none; /* منع النقر أثناء الإخفاء */
+            padding: 0;
+            line-height: 1;
+        }
+        
+        /* إظهار الدائرة فقط عند تمرير الماوس على ترويسة الصف أو العمود */
+        .excel-preview-table th:hover .insert-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .insert-btn:hover {
+            transform: scale(1.3);
+            background: #43A047; /* أخضر عند التمرير */
+        }
+
+        /* زر إدراج عمود: يُوضع على الحد الأيسر لترويسة العمود (في الـ RTL الأيسر هو نهاية العمود) */
+        .col-insert {
+            top: 50%;
+            left: -11px; 
+            transform: translateY(-50%);
+        }
+        .col-insert:hover { transform: translateY(-50%) scale(1.3); }
+
+        /* زر إدراج صف: يُوضع على الحد السفلي لترويسة الصف */
+        .row-insert {
+            bottom: -11px; 
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .row-insert:hover { transform: translateX(-50%) scale(1.3); }
 
         /* Status Messages */
         #statusMessage {
@@ -451,7 +415,6 @@
         @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes scrollGradient { 0% { background-position: 0% 0%; } 100% { background-position: 100% 0%; } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(211, 47, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -470,7 +433,7 @@
 
     <div class="container">
         <h1>إملاء الأرقام العربية</h1>
-        <div class="subtitle">تكامل كامل مع ملفات إكسل - كتابة مباشرة داخل الجدول</div>
+        <div class="subtitle">جدول إكسل تفاعلي - إدراج صفوف وأعمدة وتعديل مباشر</div>
 
         <div class="layout-wrapper">
             <!-- Panel 1: Controls (Right) -->
@@ -478,11 +441,6 @@
                 <button class="btn-start" id="toggleBtn" onclick="toggleListening()">
                     <span class="btn-icon" id="micIcon">🎙️</span> 
                     <span id="btnText">بدء الإملاء</span>
-                </button>
-
-                <!-- زر الإضافة اليدوية في وضع القائمة العادية فقط -->
-                <button class="btn-copy" onclick="addEmptyListRow()" id="addListRowBtn" style="background-image: var(--btn-upload-grad);">
-                    <span class="btn-icon">✏️</span> إضافة صف للكتابة اليدوية
                 </button>
 
                 <!-- Excel Integration Card -->
@@ -493,13 +451,13 @@
                         📁 رفع ملف إكسل موجود
                         <input type="file" id="excelUpload" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
                     </label>
-                    <div id="fileStatus">لم يتم رفع ملف (وضع القائمة العادية)</div>
+                    <div id="fileStatus">ملف جديد (غير محفوظ)</div>
 
-                    <div class="excel-inputs-row" id="excelConfigControls" style="display: none; margin-top: 10px;">
+                    <div class="excel-inputs-row" id="excelConfigControls" style="margin-top: 10px;">
                         <div class="input-group">
                             <label>ورقة العمل (Sheet)</label>
                             <select id="sheetSelect" onchange="handleSheetChange()">
-                                <option value="جديد">ورقة 1</option>
+                                <option value="ورقة 1">ورقة 1</option>
                             </select>
                         </div>
                         <div class="input-group">
@@ -531,20 +489,25 @@
                 <div class="spreadsheet-wrapper">
                     <!-- Header with Zoom Controls -->
                     <div class="spreadsheet-header">
-                        <div style="width: 70px;"></div>
-                        <span id="columnTitle">عمود الأرقام المُلتقطة</span>
-                        <div style="display: flex; gap: 5px;" dir="ltr">
-                            <button onclick="zoomList(4)" style="width: 32px; height: 32px; font-size: 22px; padding: 0; border-radius: 6px; background: #01579B; color: white; animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="تكبير">+</button>
-                            <button onclick="zoomList(-4)" style="width: 32px; height: 32px; font-size: 22px; padding: 0; border-radius: 6px; background: #01579B; color: white; animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="تصغير">-</button>
+                        <div style="flex: 1;"></div>
+                        <span id="columnTitle" style="flex: 2; text-align: center;">جدول الإكسل التفاعلي</span>
+                        <div style="flex: 1; display: flex; justify-content: flex-end; gap: 15px; align-items: center;" dir="rtl">
+                            <!-- أداة تحديد عدد الصفوف الجديدة -->
+                            <div style="display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 8px; font-size: 14px;">
+                                <input type="checkbox" id="limitRowsCheck" onchange="toggleRowLimit()" style="cursor: pointer; width: 16px; height: 16px;">
+                                <label for="limitRowsCheck" style="cursor: pointer; margin: 0;">عرض</label>
+                                <input type="number" id="limitRowsCount" value="10" min="1" max="1000" style="width: 45px; text-align: center; border-radius: 4px; border: none; font-weight: bold; outline: none; color: #01579B;" onchange="applyRowLimit()" disabled>
+                                <span>صف</span>
+                            </div>
+                            <!-- أزرار التكبير والتصغير -->
+                            <div style="display: flex; gap: 5px;" dir="ltr">
+                                <button onclick="zoomList(4)" style="width: 32px; height: 32px; font-size: 22px; padding: 0; border-radius: 6px; background: #01579B; color: white; animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="تكبير">+</button>
+                                <button onclick="zoomList(-4)" style="width: 32px; height: 32px; font-size: 22px; padding: 0; border-radius: 6px; background: #01579B; color: white; animation: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="تصغير">-</button>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Mode 1: Normal List -->
-                    <ul class="data-list" id="numberColumn">
-                        <!-- Numbers will appear here -->
-                    </ul>
-
-                    <!-- Mode 2: Merged Excel Preview Grid -->
+                    <!-- Excel Preview Grid (Always Visible) -->
                     <div id="excelPreviewContainer" class="excel-preview-container">
                         <!-- Interactive table will be generated here -->
                     </div>
@@ -560,14 +523,14 @@
     <script>
         // --- Core Application State ---
         let isListening = false;
-        let isManuallyStopped = true; // متغير جديد للتحكم القطعي في الإيقاف
+        let isManuallyStopped = true; 
         let recognition = null;
         let currentResultIndex = -1;
-        let currentInterimNodes = [];
-        const isLocalFile = window.location.protocol === 'file:'; // كشف التشغيل المحلي من الكمبيوتر
+        let interimCellRefs = []; // مصفوفة لتتبع خلايا العرض الفوري
+        const isLocalFile = window.location.protocol === 'file:'; 
 
         // Zoom Control Logic
-        let currentZoom = 28;
+        let currentZoom = 24;
         function zoomList(step) {
             currentZoom += step;
             if (currentZoom < 14) currentZoom = 14;
@@ -580,10 +543,28 @@
         let loadedWorkbook = null;
         let originalWorkbookBuffer = null;
         let originalFileName = "Dictation_Numbers";
-        let isExcelMode = false;
         let selectedExcelCell = { r: 0, c: 0 }; 
         let renderedRowCount = 0;
         let renderedColCount = 0;
+
+        // تهيئة ملف إكسل فارغ عند فتح التطبيق لأول مرة
+        function initBlankWorkbook() {
+            loadedWorkbook = XLSX.utils.book_new();
+            // إنشاء جدول فارغ بـ 30 صف و 10 أعمدة كبداية
+            const emptyData = Array.from({length: 30}, () => Array(10).fill(""));
+            const ws = XLSX.utils.aoa_to_sheet(emptyData);
+            XLSX.utils.book_append_sheet(loadedWorkbook, ws, "ورقة 1");
+            
+            const select = document.getElementById('sheetSelect');
+            select.innerHTML = '<option value="ورقة 1">ورقة 1</option>';
+            
+            document.getElementById('fileStatus').textContent = `ملف جديد (غير محفوظ)`;
+            document.getElementById('fileStatus').style.color = "#0288D1";
+            document.getElementById('columnTitle').textContent = `جدول الأرقام (ملف جديد)`;
+
+            renderSheetPreview("ورقة 1");
+            selectCell('A1');
+        }
 
         function handleExcelUpload(event) {
             const file = event.target.files[0];
@@ -597,14 +578,8 @@
                     originalWorkbookBuffer = new Uint8Array(e.target.result);
                     loadedWorkbook = XLSX.read(originalWorkbookBuffer, {type: 'array'});
                     
-                    // Switch UI Mode
-                    isExcelMode = true;
-                    document.getElementById('numberColumn').style.display = 'none';
-                    document.getElementById('addListRowBtn').style.display = 'none'; // Hide manual row button
-                    document.getElementById('excelConfigControls').style.display = 'flex';
                     document.getElementById('columnTitle').textContent = `معاينة: ${file.name}`;
                     
-                    // Populate Sheets
                     const select = document.getElementById('sheetSelect');
                     select.innerHTML = '';
                     loadedWorkbook.SheetNames.forEach(name => {
@@ -616,7 +591,7 @@
                     
                     document.getElementById('fileStatus').textContent = `✅ نشط: ${file.name}`;
                     document.getElementById('fileStatus').style.color = "#2E7D32";
-                    showStatus("تم التبديل إلى وضع إكسل بنجاح", "#2E7D32");
+                    showStatus("تم رفع الإكسل بنجاح", "#2E7D32");
 
                     handleSheetChange(); 
                 } catch (err) {
@@ -628,7 +603,6 @@
         }
 
         function handleSheetChange() {
-            if (!isExcelMode) return;
             const sheetName = document.getElementById('sheetSelect').value;
             renderSheetPreview(sheetName);
             selectCell('A1');
@@ -638,26 +612,33 @@
             const ws = loadedWorkbook.Sheets[sheetName];
             const data = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ""});
             const previewContainer = document.getElementById('excelPreviewContainer');
-            previewContainer.style.display = 'block';
 
-            renderedColCount = 5;
+            renderedColCount = 10;
             data.forEach(row => { if (row.length > renderedColCount) renderedColCount = row.length; });
-            renderedColCount = Math.min(renderedColCount + 3, 26); 
-            renderedRowCount = Math.max(data.length + 30, 100); 
+            renderedColCount = Math.min(renderedColCount + 2, 26); 
+            renderedRowCount = Math.max(data.length + 15, 30); 
 
             let html = '<table class="excel-preview-table" id="excelTable"><thead><tr><th></th>';
+            // بناء ترويسة الأعمدة مع أزرار الإضافة (+)
             for (let c = 0; c < renderedColCount; c++) {
-                html += `<th>${XLSX.utils.encode_col(c)}</th>`;
+                html += `<th style="position: relative;">
+                            ${XLSX.utils.encode_col(c)}
+                            <button class="insert-btn col-insert" onclick="insertCol(${c})" title="إدراج عمود جديد هنا">+</button>
+                         </th>`;
             }
             html += '</tr></thead><tbody>';
 
+            // بناء الصفوف مع أزرار الإضافة (+)
             for (let r = 0; r < renderedRowCount; r++) {
-                html += `<tr id="row-${r}"><th>${r + 1}</th>`;
+                html += `<tr id="row-${r}">
+                            <th style="position: relative;">
+                                ${r + 1}
+                                <button class="insert-btn row-insert" onclick="insertRow(${r})" title="إدراج صف جديد هنا">+</button>
+                            </th>`;
                 const rowData = data[r] || [];
                 for (let c = 0; c < renderedColCount; c++) {
                     const cellRef = XLSX.utils.encode_cell({r: r, c: c});
                     const cellVal = rowData[c] !== undefined ? rowData[c] : "";
-                    // اضافة contenteditable للسماح بالكتابة المباشرة داخل الخلية
                     html += `<td contenteditable="true" 
                                  onclick="selectCell('${cellRef}')" 
                                  onblur="updateExcelCellData('${cellRef}', this.innerText)" 
@@ -669,6 +650,61 @@
             }
             html += '</tbody></table>';
             previewContainer.innerHTML = html;
+
+            // إعادة تحديد الخلية بعد إعادة الرسم
+            const currentCellRef = document.getElementById('startCell').value.toUpperCase().trim();
+            if(currentCellRef) {
+                const targetTd = document.getElementById('cell-' + currentCellRef);
+                if(targetTd) targetTd.classList.add('selected-cell');
+            }
+
+            // تطبيق قيود عدد الصفوف إذا كانت مفعلة
+            applyRowLimit();
+        }
+
+        // --- دوال إدراج الصفوف والأعمدة (مثل الوورد) ---
+        function insertRow(rowIndex) {
+            const sheetName = document.getElementById('sheetSelect').value;
+            const ws = loadedWorkbook.Sheets[sheetName];
+            let data = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ""});
+            
+            let maxCols = renderedColCount;
+            while(data.length <= rowIndex) data.push(Array(maxCols).fill(""));
+            
+            // إدراج صف فارغ (Array) أسفل الصف المحدد
+            data.splice(rowIndex + 1, 0, Array(maxCols).fill(""));
+            
+            loadedWorkbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(data);
+            renderSheetPreview(sheetName);
+            
+            // تحديث مكان المؤشر إذا كان أسفل مكان الإدراج
+            if (selectedExcelCell.r > rowIndex) {
+                selectedExcelCell.r++;
+                selectCell(XLSX.utils.encode_cell(selectedExcelCell));
+            }
+            showStatus("تم إدراج صف جديد", "#0288D1");
+        }
+
+        function insertCol(colIndex) {
+            const sheetName = document.getElementById('sheetSelect').value;
+            const ws = loadedWorkbook.Sheets[sheetName];
+            let data = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ""});
+            
+            // إدراج عمود فارغ (نص فارغ) في كل صف
+            data.forEach(row => {
+                while(row.length <= colIndex) row.push("");
+                row.splice(colIndex + 1, 0, "");
+            });
+            
+            loadedWorkbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(data);
+            renderSheetPreview(sheetName);
+            
+            // تحديث مكان المؤشر 
+            if (selectedExcelCell.c > colIndex) {
+                selectedExcelCell.c++;
+                selectCell(XLSX.utils.encode_cell(selectedExcelCell));
+            }
+            showStatus("تم إدراج عمود جديد", "#0288D1");
         }
 
         // حفظ البيانات في ذاكرة شيت الإكسل عند الانتهاء من الكتابة في الخلية
@@ -680,7 +716,7 @@
             XLSX.utils.sheet_add_aoa(ws, [[parsedVal]], {origin: cellRef});
         }
 
-        // التعامل مع زر Enter للنزول للخلية التالية (مثل برنامج Excel)
+        // التعامل مع زر Enter للنزول للخلية التالية
         function handleExcelCellKeydown(e, cellRef) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -701,7 +737,6 @@
         }
 
         function selectCell(cellRef) {
-            if (!isExcelMode) return;
             document.getElementById('startCell').value = cellRef;
             const decoded = XLSX.utils.decode_cell(cellRef);
             selectedExcelCell = { r: decoded.r, c: decoded.c };
@@ -727,7 +762,10 @@
             for (let r = renderedRowCount; r <= targetRowIndex + 10; r++) {
                 let tr = document.createElement('tr');
                 tr.id = `row-${r}`;
-                tr.innerHTML = `<th>${r + 1}</th>`;
+                tr.innerHTML = `<th style="position: relative;">
+                                    ${r + 1}
+                                    <button class="insert-btn row-insert" onclick="insertRow(${r})" title="إدراج صف جديد هنا">+</button>
+                                </th>`;
                 for (let c = 0; c < renderedColCount; c++) {
                     const cellRef = XLSX.utils.encode_cell({r: r, c: c});
                     tr.innerHTML += `<td contenteditable="true" 
@@ -740,81 +778,59 @@
                 tbody.appendChild(tr);
             }
             renderedRowCount = targetRowIndex + 11;
+            
+            // تطبيق قيود عدد الصفوف إذا كانت مفعلة بعد إضافة صفوف جديدة
+            applyRowLimit();
+        }
+
+        // --- دوال التحكم بعدد الصفوف المعروضة ---
+        function toggleRowLimit() {
+            const isChecked = document.getElementById('limitRowsCheck').checked;
+            document.getElementById('limitRowsCount').disabled = !isChecked;
+            applyRowLimit();
+        }
+
+        function applyRowLimit() {
+            const isChecked = document.getElementById('limitRowsCheck').checked;
+            const limit = parseInt(document.getElementById('limitRowsCount').value, 10) || 10;
+            const rows = document.querySelectorAll('#excelTable tbody tr');
+            
+            rows.forEach((row, index) => {
+                if (isChecked && index >= limit) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = ''; // العودة للوضع الطبيعي (إظهار الكل)
+                }
+            });
         }
 
         // --- Logic For Dictating/Adding Data ---
-
         function addNumberLogic(numberStr) {
-            if (isExcelMode) {
-                ensureExcelRowExists(selectedExcelCell.r);
-                
-                const cellRef = XLSX.utils.encode_cell(selectedExcelCell);
-                const targetTd = document.getElementById('cell-' + cellRef);
-                if (targetTd) targetTd.textContent = numberStr;
+            ensureExcelRowExists(selectedExcelCell.r);
+            
+            const cellRef = XLSX.utils.encode_cell(selectedExcelCell);
+            const targetTd = document.getElementById('cell-' + cellRef);
+            if (targetTd) {
+                targetTd.textContent = numberStr;
+                targetTd.style.color = ""; // إعادة اللون للطبيعي بعد انتهاء النطق
+            }
 
-                const sheetName = document.getElementById('sheetSelect').value;
-                const ws = loadedWorkbook.Sheets[sheetName];
-                XLSX.utils.sheet_add_aoa(ws, [[Number(numberStr)]], {origin: cellRef});
+            const sheetName = document.getElementById('sheetSelect').value;
+            const ws = loadedWorkbook.Sheets[sheetName];
+            XLSX.utils.sheet_add_aoa(ws, [[Number(numberStr)]], {origin: cellRef});
 
-                selectedExcelCell.r++;
-                const nextCellRef = XLSX.utils.encode_cell(selectedExcelCell);
-                selectCell(nextCellRef);
+            selectedExcelCell.r++;
+            const nextCellRef = XLSX.utils.encode_cell(selectedExcelCell);
+            selectCell(nextCellRef);
 
-                const nextTd = document.getElementById('cell-' + nextCellRef);
-                if (nextTd) {
-                    const container = document.getElementById('excelPreviewContainer');
-                    const tdRect = nextTd.getBoundingClientRect();
-                    const contRect = container.getBoundingClientRect();
-                    if (tdRect.bottom > contRect.bottom || tdRect.top < contRect.top) {
-                        nextTd.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+            const nextTd = document.getElementById('cell-' + nextCellRef);
+            if (nextTd) {
+                const container = document.getElementById('excelPreviewContainer');
+                const tdRect = nextTd.getBoundingClientRect();
+                const contRect = container.getBoundingClientRect();
+                if (tdRect.bottom > contRect.bottom || tdRect.top < contRect.top) {
+                    nextTd.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            } else {
-                // Mode 1: Normal List
-                const list = document.getElementById('numberColumn');
-                const prev = list.querySelector('.highlight-row');
-                if(prev) prev.classList.remove('highlight-row');
-
-                const li = document.createElement('li');
-                li.className = 'data-row highlight-row';
-                li.innerHTML = `
-                    <div class="row-left">
-                        <span class="row-index"></span>
-                        <span class="row-value" contenteditable="true" onkeydown="handleListKeydown(event, this)">${numberStr}</span>
-                    </div>
-                    <button class="btn-delete-row" onclick="deleteRow(this)" title="حذف">🗑️</button>
-                `;
-                list.appendChild(li);
-                updateRowNumbers();
-
-                setTimeout(() => {
-                    list.scrollTop = list.scrollHeight;
-                    li.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }, 20);
-                
-                return li; 
-            }
-            return null;
-        }
-
-        // الدالة المسؤولة عن إضافة صف فارغ للكتابة اليدوية (في وضع القائمة العادية)
-        function addEmptyListRow() {
-            currentInterimNodes = []; 
-            const node = addNumberLogic("");
-            if (node) {
-                setTimeout(() => {
-                    const editableSpan = node.querySelector('.row-value');
-                    if (editableSpan) editableSpan.focus();
-                }, 50);
-            }
-        }
-
-        // التعامل مع زر Enter في القائمة العادية لإنشاء صف جديد فوراً
-        function handleListKeydown(e, spanEl) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                spanEl.blur();
-                addEmptyListRow();
             }
         }
 
@@ -838,31 +854,40 @@
                 const current = event.resultIndex;
                 if (current !== currentResultIndex) {
                     currentResultIndex = current;
-                    currentInterimNodes = [];
                 }
 
                 const transcript = event.results[current][0].transcript.trim();
                 const digitsArray = extractDigits(transcript);
 
-                if (isExcelMode) {
-                    if (event.results[current].isFinal) {
-                        digitsArray.forEach(num => addNumberLogic(num));
+                // 1. مسح الأرقام المؤقتة السابقة من الشاشة (لتحديث العرض الفوري)
+                interimCellRefs.forEach(ref => {
+                    const td = document.getElementById('cell-' + ref);
+                    if (td) {
+                        td.textContent = "";
+                        td.style.color = "";
                     }
+                });
+                interimCellRefs = [];
+
+                if (event.results[current].isFinal) {
+                    // 2. إذا توقفت عن النطق (النتيجة النهائية)، نحفظ الرقم رسمياً
+                    digitsArray.forEach(num => addNumberLogic(num));
                 } else {
-                    const list = document.getElementById('numberColumn');
-                    for (let i = 0; i < digitsArray.length; i++) {
-                        if (i < currentInterimNodes.length) {
-                            const valSpan = currentInterimNodes[i].querySelector('.row-value');
-                            if (valSpan && valSpan.textContent !== digitsArray[i]) valSpan.textContent = digitsArray[i];
-                        } else {
-                            const node = addNumberLogic(digitsArray[i]);
-                            if (node) currentInterimNodes.push(node);
+                    // 3. عرض الأرقام فوراً أثناء التحدث (Live Preview) بلون برتقالي
+                    let tempRow = selectedExcelCell.r;
+                    let col = selectedExcelCell.c;
+
+                    digitsArray.forEach(num => {
+                        ensureExcelRowExists(tempRow);
+                        const cellRef = XLSX.utils.encode_cell({r: tempRow, c: col});
+                        const targetTd = document.getElementById('cell-' + cellRef);
+                        if (targetTd) {
+                            targetTd.textContent = num;
+                            targetTd.style.color = "#FF8F00"; // لون برتقالي يدل على الاستماع المستمر
                         }
-                    }
-                    while (currentInterimNodes.length > digitsArray.length) {
-                        const liToRemove = currentInterimNodes.pop();
-                        liToRemove.remove(); updateRowNumbers();
-                    }
+                        interimCellRefs.push(cellRef);
+                        tempRow++;
+                    });
                 }
             };
 
@@ -879,23 +904,18 @@
                     }
                     stopListening();
                 }
-                // نتجاهل الأخطاء العابرة (مثل network/no-speech) وندع دالة onend تعيد تشغيله
             };
 
-            // هندسة جديدة للإيقاف والتشغيل (يمنع التوقف المفاجئ)
             recognition.onend = function() {
                 isListening = false;
                 if (!isManuallyStopped) {
                     if (isLocalFile) {
-                        // متصفح كروم يرفض الإعادة التلقائية محلياً ويظهر رسالة السماح باستمرار فتنهار الأداة
-                        // لذلك سنوقف الإعادة التلقائية هنا
                         showStatus("توقف الميكروفون (تشغيل محلي). إضغط بدء الإملاء مجدداً.", "#F57C00");
                         updateUI();
                     } else {
-                        // إعادة التشغيل التلقائي المستمر (تعمل بنجاح على السيرفرات فقط)
                         setTimeout(() => {
                             if (!isManuallyStopped) {
-                                try { recognition.start(); } catch(e) { console.error("إعادة التشغيل", e); }
+                                try { recognition.start(); } catch(e) {}
                             }
                         }, 300); 
                     }
@@ -926,12 +946,12 @@
         }
         
         function startListening() { 
-            isManuallyStopped = false; // تسجيل أن التشغيل تم برغبة المستخدم
+            isManuallyStopped = false; 
             try { recognition.start(); } catch(e) {} 
         }
         
         function stopListening() { 
-            isManuallyStopped = true; // تسجيل أن الإيقاف كان إرادياً
+            isManuallyStopped = true; 
             isListening = false; 
             if (recognition) recognition.stop(); 
             showStatus("تم الإيقاف.", "#0288D1"); 
@@ -949,43 +969,45 @@
             }
         }
 
-        function updateRowNumbers() {
-            if (isExcelMode) return;
-            const rows = document.querySelectorAll('#numberColumn .data-row');
-            rows.forEach((row, index) => {
-                const indexSpan = row.querySelector('.row-index');
-                if (indexSpan) indexSpan.textContent = index + 1;
-            });
-        }
-
-        function deleteRow(btn) {
-            const li = btn.closest('.data-row');
-            if (li) {
-                li.remove(); updateRowNumbers(); showStatus("تم حذف الرقم", "#F57C00");
-                currentInterimNodes = currentInterimNodes.filter(node => node !== li);
-            }
-        }
-
         function clearData() {
-            if (isExcelMode && originalWorkbookBuffer) {
+            if (originalWorkbookBuffer) {
                 loadedWorkbook = XLSX.read(originalWorkbookBuffer, {type: 'array'});
                 handleSheetChange();
                 showStatus("تم التراجع للنسخة الأصلية للإكسل", "#D32F2F");
             } else {
-                document.getElementById('numberColumn').innerHTML = '';
-                currentInterimNodes = []; currentResultIndex = -1;
-                showStatus("تم مسح البيانات.", "#D32F2F");
+                initBlankWorkbook();
+                showStatus("تم مسح الجدول وتهيئة ملف جديد.", "#D32F2F");
             }
         }
 
         function getNumbersData() {
-            if (isExcelMode) {
-                const sheetName = document.getElementById('sheetSelect').value;
-                return XLSX.utils.sheet_to_csv(loadedWorkbook.Sheets[sheetName]);
-            } else {
-                const listItems = document.querySelectorAll('#numberColumn .row-value');
-                return Array.from(listItems).map(span => span.textContent.trim()).join('\n');
-            }
+            const sheetName = document.getElementById('sheetSelect').value;
+            const ws = loadedWorkbook.Sheets[sheetName];
+            
+            // تحويل ورقة العمل إلى مصفوفة بيانات
+            const data = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ""});
+            let copyText = "";
+
+            data.forEach(row => {
+                // البحث عن آخر خلية تحتوي على بيانات في هذا الصف لقص الخلايا الفارغة الزائدة
+                let lastDataIndex = -1;
+                for (let i = row.length - 1; i >= 0; i--) {
+                    if (row[i] !== "") {
+                        lastDataIndex = i;
+                        break;
+                    }
+                }
+                
+                if (lastDataIndex >= 0) {
+                    // دمج البيانات باستخدام مسافة الجدولة (Tab) لتتوافق مع Excel بدون فواصل
+                    copyText += row.slice(0, lastDataIndex + 1).join('\t') + '\n';
+                } else {
+                    // إذا كان الصف فارغاً بالكامل نتركه كسطر فارغ
+                    copyText += '\n';
+                }
+            });
+
+            return copyText.trim();
         }
 
         function copyToExcel() {
@@ -1000,24 +1022,12 @@
         }
 
         function exportModifiedExcel() {
-            let wb;
-            if (isExcelMode && loadedWorkbook) {
-                wb = loadedWorkbook;
-            } else {
-                const listItems = document.querySelectorAll('#numberColumn .row-value');
-                const aoa = Array.from(listItems).map(span => [Number(span.textContent.trim())]);
-                if (aoa.length === 0) { showStatus("لا توجد أرقام لتحميلها!", "red"); return; }
-                wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet([["الأرقام المُملتة"], ...aoa]);
-                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-            }
-
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0]; 
             const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-').slice(0, 5); 
             const finalFileName = `${originalFileName}_${dateStr}_${timeStr}.xlsx`;
 
-            XLSX.writeFile(wb, finalFileName);
+            XLSX.writeFile(loadedWorkbook, finalFileName);
             showStatus(`✅ تم تحميل: ${finalFileName}`, "#2E7D32");
         }
 
@@ -1035,8 +1045,9 @@
             document.getElementById('statusMessage').style.opacity = 0;
         }
 
-        // إضافة رسالة تحذيرية تظهر تلقائياً عند فتح الملف من الكمبيوتر مباشرة
         window.onload = function() {
+            initBlankWorkbook(); // بدء بملف إكسل فارغ دائماً
+
             if (isLocalFile) {
                 showErrorBox("⚠️ <b>تنبيه (تشغيل محلي):</b><br>متصفح Chrome لا يحفظ صلاحية الميكروفون للملفات المفتوحة مباشرة من الكمبيوتر (C:/)، وسيطلب الإذن باستمرار.<br><b>لحل المشكلة نهائياً للعمل المتواصل:</b> يرجى تشغيل الملف باستخدام (Local Server) أو استخدم متصفح <b>Firefox</b>.");
             }
