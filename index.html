@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arabic Number Dictation</title>
+    <!-- مكتبة SheetJS لمعالجة ملفات الإكسل (مجانية وغير محدودة) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         /* Base Styling & Light Blue Theme */
         :root {
             --bg-light-blue: #E1F5FE;
             --text-dark: #01579B;
             --btn-success-grad: linear-gradient(45deg, #0288D1, #43A047, #0288D1);
-            --btn-excel-grad: linear-gradient(45deg, #2E7D32, #66BB6A, #2E7D32); /* Green for Excel */
+            --btn-excel-grad: linear-gradient(45deg, #2E7D32, #66BB6A, #2E7D32);
             --btn-danger-grad: linear-gradient(45deg, #D32F2F, #E53935, #D32F2F);
             --btn-copy-grad: linear-gradient(45deg, #1976D2, #8E24AA, #1976D2);
+            --btn-upload-grad: linear-gradient(45deg, #F57C00, #FFB300, #F57C00);
             --footer-grad: linear-gradient(90deg, #0288D1, #4CAF50, #0288D1, #4CAF50);
         }
 
@@ -41,43 +44,42 @@
             text-align: center;
             font-size: 18px;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             color: #0277BD;
         }
 
-        /* Main Layout (Two Columns) */
+        /* Main Layout */
         .container {
             display: flex;
             flex-direction: column;
             flex: 1;
-            padding: 10px 20px;
+            padding: 5px 20px 10px 20px;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
-            min-height: 0; /* Fixes scrolling issue in flex */
+            min-height: 0;
         }
 
         .layout-wrapper {
             display: flex;
             flex: 1;
-            gap: 30px;
+            gap: 20px;
             min-height: 0;
-            /* RTL: Right item is first (Controls), Left item is second (Column) */
         }
 
-        /* Right Panel: Controls */
+        /* Panels */
         .controls-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            padding: 10px;
+            gap: 12px;
+            padding: 5px;
             overflow-y: auto;
+            max-width: 400px; /* Prevent it from getting too wide */
         }
 
-        /* Left Panel: Spreadsheet */
         .spreadsheet-panel {
             flex: 1;
             display: flex;
@@ -85,12 +87,12 @@
             min-height: 0;
         }
 
-        /* Controls / Buttons */
+        /* Common Buttons */
         button {
             border: none;
             border-radius: 12px;
             color: white;
-            padding: 18px 25px;
+            padding: 15px 20px;
             font-size: 20px;
             font-weight: bold;
             cursor: pointer;
@@ -99,7 +101,6 @@
             justify-content: center;
             gap: 12px;
             width: 100%;
-            max-width: 350px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.15);
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             background-size: 200% 200%;
@@ -107,57 +108,126 @@
         }
 
         button:hover:not(:disabled), button:focus:not(:disabled) {
-            transform: scale(1.05);
+            transform: scale(1.03);
             outline: none;
         }
+        button:active:not(:disabled) { transform: scale(0.95); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
 
-        button:active:not(:disabled) {
-            transform: scale(0.95);
-        }
-        
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            animation: none;
-        }
-
-        .btn-start { background-image: var(--btn-success-grad); padding: 25px; font-size: 24px; }
+        .btn-start { background-image: var(--btn-success-grad); padding: 22px; font-size: 24px; }
         .btn-start.listening { background-image: var(--btn-danger-grad); animation: pulse 1.5s infinite; }
         .btn-excel { background-image: var(--btn-excel-grad); }
         .btn-copy { background-image: var(--btn-copy-grad); }
-        .btn-clear { background-image: var(--btn-danger-grad); }
+        .btn-clear { background-image: var(--btn-danger-grad); padding: 12px; font-size: 16px; }
 
         .btn-icon { font-size: 26px; display: inline-block; }
         .listening .btn-icon { animation: float 1s ease-in-out infinite alternate; }
+
+        /* Excel Integration Card */
+        .excel-card {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 2px solid #81D4FA;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .excel-card-title {
+            text-align: center;
+            font-weight: bold;
+            color: #0288D1;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+
+        .file-upload-label {
+            background-image: var(--btn-upload-grad);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            display: block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            transition: transform 0.2s;
+        }
+        .file-upload-label:hover { transform: scale(1.02); }
+        input[type="file"] { display: none; }
+
+        .excel-inputs-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #01579B;
+            margin-bottom: 4px;
+        }
+
+        .excel-card select, .excel-card input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #B3E5FC;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            color: #01579B;
+            font-weight: bold;
+        }
+        .excel-card select:focus, .excel-card input[type="text"]:focus {
+            border-color: #0288D1;
+        }
+
+        /* File Info Text */
+        #fileStatus {
+            font-size: 12px;
+            text-align: center;
+            color: #E65100;
+            font-weight: bold;
+            margin-top: 5px;
+        }
 
         /* Manual Input Box */
         .manual-input-box {
             display: flex;
             width: 100%;
-            max-width: 350px;
             gap: 10px;
-            margin-top: 10px;
             background: white;
             padding: 10px;
             border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            border: 2px solid #81D4FA;
         }
 
         .manual-input-box input {
             flex: 1;
             padding: 12px;
             border-radius: 8px;
-            border: 2px solid #81D4FA;
+            border: 2px solid #E1F5FE;
             font-size: 20px;
             text-align: center;
             color: #01579B;
             font-weight: bold;
             outline: none;
         }
-
-        .manual-input-box input:focus {
-            border-color: #0288D1;
-        }
+        .manual-input-box input:focus { border-color: #0288D1; }
 
         .manual-input-box button {
             width: auto;
@@ -201,13 +271,13 @@
         }
 
         .data-row {
-            padding: 15px 20px;
+            padding: 12px 20px;
             border-bottom: 1px solid #E1F5FE;
             font-size: 28px;
             font-weight: bold;
             text-align: center;
             color: #01579B;
-            animation: slideIn 0.3s ease-out forwards;
+            animation: slideIn 0.2s ease-out forwards;
             background: #ffffff;
             transition: background 0.2s;
         }
@@ -230,33 +300,29 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Status & Error */
+        /* Status Messages */
         #statusMessage {
             text-align: center;
             min-height: 24px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #4CAF50;
             transition: opacity 0.3s;
-            margin-top: 10px;
             width: 100%;
-            max-width: 350px;
         }
 
         #errorBox {
             display: none;
             background: #ffebee;
             color: #c62828;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             border: 2px solid #ef9a9a;
-            margin-top: 10px;
             text-align: center;
             font-weight: bold;
-            line-height: 1.6;
-            font-size: 16px;
+            line-height: 1.5;
+            font-size: 14px;
             width: 100%;
-            max-width: 350px;
             box-sizing: border-box;
         }
 
@@ -278,48 +344,22 @@
         }
 
         /* Animations */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        @keyframes scrollGradient {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 100% 0%; }
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(211, 47, 47, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-15px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes float {
-            from { transform: translateY(-2px); }
-            to { transform: translateY(2px); }
-        }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes scrollGradient { 0% { background-position: 0% 0%; } 100% { background-position: 100% 0%; } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(211, 47, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes float { from { transform: translateY(-2px); } to { transform: translateY(2px); } }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 12px; }
-        ::-webkit-scrollbar-track { background: #E1F5FE; border-radius: 6px;}
-        ::-webkit-scrollbar-thumb { background: #81D4FA; border-radius: 6px; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #E1F5FE; border-radius: 5px;}
+        ::-webkit-scrollbar-thumb { background: #81D4FA; border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: #0288D1; }
 
-        /* Responsive Design for smaller screens (Mobiles) */
         @media (max-width: 768px) {
-            .layout-wrapper {
-                flex-direction: column;
-                overflow-y: auto;
-            }
-            .controls-panel, .spreadsheet-panel {
-                flex: none;
-                width: 100%;
-            }
-            .spreadsheet-panel {
-                height: 400px; /* fixed height on mobile to ensure scrolling */
-            }
+            .layout-wrapper { flex-direction: column; overflow-y: auto; }
+            .controls-panel { max-width: 100%; }
+            .spreadsheet-panel { height: 400px; flex: none;}
         }
     </style>
 </head>
@@ -327,44 +367,68 @@
 
     <div class="container">
         <h1>إملاء الأرقام العربية</h1>
-        <div class="subtitle">تخطيط الشاشة المنقسمة - جاهز للنسخ والتنزيل</div>
+        <div class="subtitle">تكامل متقدم مع ملفات إكسل (Excel Integration)</div>
 
         <div class="layout-wrapper">
-            <!-- Panel 1 (Right visually due to RTL): Controls -->
+            <!-- Panel 1: Controls -->
             <div class="controls-panel">
                 <button class="btn-start" id="toggleBtn" onclick="toggleListening()">
                     <span class="btn-icon" id="micIcon">🎙️</span> 
                     <span id="btnText">بدء الإملاء</span>
                 </button>
-                
-                <!-- NEW EXCEL DOWNLOAD BUTTON -->
-                <button class="btn-excel" onclick="downloadExcel()">
-                    <span class="btn-icon">📥</span> تحميل ملف Excel
-                </button>
-                
-                <button class="btn-copy" onclick="copyToExcel()">
-                    <span class="btn-icon">📋</span> نسخ الأرقام فقط
-                </button>
-                
-                <button class="btn-clear" onclick="clearData()">
-                    <span class="btn-icon">🗑️</span> مسح الكل
-                </button>
+
+                <!-- Excel Integration Card -->
+                <div class="excel-card">
+                    <div class="excel-card-title">إعدادات ملف Excel</div>
+                    
+                    <label class="file-upload-label">
+                        📁 رفع ملف إكسل موجود
+                        <input type="file" id="excelUpload" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
+                    </label>
+                    <div id="fileStatus">لم يتم رفع ملف (سيتم إنشاء ملف جديد)</div>
+
+                    <div class="excel-inputs-row">
+                        <div class="input-group">
+                            <label>ورقة العمل (Sheet)</label>
+                            <select id="sheetSelect">
+                                <option value="جديد">ورقة 1</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>خلية البداية (مثال: B2)</label>
+                            <input type="text" id="startCell" placeholder="A1" value="A1">
+                        </div>
+                    </div>
+                    
+                    <button class="btn-excel" onclick="exportModifiedExcel()">
+                        <span class="btn-icon">📥</span> تحميل الإكسل المحدث
+                    </button>
+                </div>
 
                 <div class="manual-input-box">
-                    <input type="number" id="manualInput" placeholder="إدخال رقم يدوياً..." onkeypress="if(event.key === 'Enter') addManualNumber()">
+                    <input type="number" id="manualInput" placeholder="إدخال يدوي..." onkeypress="if(event.key === 'Enter') addManualNumber()">
                     <button onclick="addManualNumber()">إضافة</button>
+                </div>
+
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button class="btn-copy" onclick="copyToExcel()" style="flex: 2; padding: 12px; font-size: 16px;">
+                        <span class="btn-icon">📋</span> نسخ فقط
+                    </button>
+                    <button class="btn-clear" onclick="clearData()" style="flex: 1;">
+                        🗑️ مسح
+                    </button>
                 </div>
 
                 <div id="errorBox"></div>
                 <div id="statusMessage"></div>
             </div>
 
-            <!-- Panel 2 (Left visually due to RTL): Spreadsheet -->
+            <!-- Panel 2: Spreadsheet -->
             <div class="spreadsheet-panel">
                 <div class="spreadsheet-wrapper">
-                    <div class="spreadsheet-header">عمود الأرقام</div>
+                    <div class="spreadsheet-header">عمود الأرقام المُلتقطة</div>
                     <ul class="data-list" id="numberColumn">
-                        <!-- Numbers will appear here from top to bottom -->
+                        <!-- Numbers will appear here instantly -->
                     </ul>
                 </div>
             </div>
@@ -376,24 +440,23 @@
     </footer>
 
     <script>
-        // Data storage
-        let numbersData = [];
+        // --- Speech Recognition Logic ---
         let isListening = false;
         let recognition = null;
+        let currentResultIndex = -1;
+        let currentInterimNodes = [];
 
-        // Initialize Speech Recognition
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            
             if (!SpeechRecognition) {
-                showStatus("متصفحك لا يدعم التعرف على الصوت. يرجى استخدام Chrome.", "red");
+                showStatus("متصفحك لا يدعم التعرف على الصوت.", "red");
                 return false;
             }
 
             recognition = new SpeechRecognition();
             recognition.lang = 'ar-EG'; 
             recognition.continuous = true;
-            recognition.interimResults = false;
+            recognition.interimResults = true; 
 
             recognition.onstart = function() {
                 isListening = true;
@@ -403,228 +466,232 @@
 
             recognition.onresult = function(event) {
                 const current = event.resultIndex;
+                if (current !== currentResultIndex) {
+                    currentResultIndex = current;
+                    currentInterimNodes = [];
+                }
+
                 const transcript = event.results[current][0].transcript.trim();
-                processTranscript(transcript);
+                const digitsArray = extractDigits(transcript);
+                const list = document.getElementById('numberColumn');
+
+                for (let i = 0; i < digitsArray.length; i++) {
+                    if (i < currentInterimNodes.length) {
+                        if (currentInterimNodes[i].textContent !== digitsArray[i]) {
+                            currentInterimNodes[i].textContent = digitsArray[i];
+                        }
+                    } else {
+                        const prev = list.querySelector('.highlight-row');
+                        if (prev) prev.classList.remove('highlight-row');
+
+                        const li = document.createElement('li');
+                        li.className = 'data-row highlight-row';
+                        li.textContent = digitsArray[i];
+                        list.appendChild(li);
+                        
+                        currentInterimNodes.push(li);
+                        setTimeout(() => {
+                            list.scrollTop = list.scrollHeight;
+                            li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }, 20);
+                    }
+                }
+
+                while (currentInterimNodes.length > digitsArray.length) {
+                    const liToRemove = currentInterimNodes.pop();
+                    liToRemove.remove();
+                }
             };
 
             recognition.onerror = function(event) {
-                console.warn("حالة الميكروفون:", event.error);
-                
                 if (event.error === 'not-allowed' || event.error === 'security') {
-                    showErrorBox("⚠️ تم حظر الميكروفون.<br>الرجاء إعطاء صلاحية الميكروفون للمتصفح.");
+                    showErrorBox("⚠️ تم حظر الميكروفون.");
                     stopListening();
-                } else if (event.error === 'network') {
-                    if (window.self !== window.top) {
-                        showErrorBox("⚠️ نافذة المعاينة تمنع الميكروفون لأسباب أمنية.<br><span style='color:#b71c1c;'>الحل: احفظ الكود كملف (index.html) وافتحه في Chrome.</span>");
-                        stopListening();
-                    }
+                } else if (event.error === 'network' && window.self !== window.top) {
+                    showErrorBox("⚠️ افتح الكود في نافذة مستقلة.");
+                    stopListening();
                 }
             };
 
             recognition.onend = function() {
                 if (isListening) {
                     setTimeout(() => {
-                        try {
-                            if (isListening) {
-                                recognition.start();
-                                console.log("تمت إعادة تشغيل الميكروفون تلقائياً...");
-                            }
-                        } catch(e) {
-                            console.error("فشل إعادة التشغيل", e);
-                        }
+                        try { if (isListening) recognition.start(); } catch(e) {}
                     }, 400); 
-                } else {
-                    updateUI();
-                }
+                } else { updateUI(); }
             };
 
             return true;
         }
 
-        // Processing Logic
-        function processTranscript(text) {
-            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-            let processedText = text.replace(/[٠-٩]/g, function(w) {
-                return arabicNumbers.indexOf(w).toString();
-            });
-
-            const wordMap = {
-                'صفر': '0', 'واحد': '1', 'اثنين': '2', 'اثنان': '2', 'اتنين': '2', 
-                'تلاته': '3', 'ثلاثة': '3', 'تلاتة': '3',
-                'اربعة': '4', 'أربعة': '4', 'خمسة': '5', 'ستة': '6', 'سبعة': '7', 
-                'ثمانية': '8', 'تمانية': '8', 'تسعة': '9', 'عشرة': '10'
-            };
-
+        function extractDigits(text) {
+            const arabicNumbers = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            let processedText = text.replace(/[٠-٩]/g, w => arabicNumbers.indexOf(w).toString());
+            const wordMap = { 'صفر':'0', 'واحد':'1', 'اثنين':'2', 'اثنان':'2', 'اتنين':'2', 'تلاته':'3', 'ثلاثة':'3', 'تلاتة':'3', 'اربعة':'4', 'أربعة':'4', 'خمسة':'5', 'ستة':'6', 'سبعة':'7', 'ثمانية':'8', 'تمانية':'8', 'تسعة':'9', 'عشرة':'10' };
             let words = processedText.split(/\s+/);
             for (let i = 0; i < words.length; i++) {
-                if (wordMap[words[i]]) {
-                    words[i] = wordMap[words[i]];
-                }
+                if (wordMap[words[i]]) words[i] = wordMap[words[i]];
             }
             processedText = words.join(' ');
+            return processedText.match(/\d+/g) || [];
+        }
 
-            const numericMatches = processedText.match(/\d+/g);
-            if (numericMatches) {
-                numericMatches.forEach(num => {
-                    addNumber(num);
-                });
-            }
+        function getNumbersData() {
+            const listItems = document.querySelectorAll('#numberColumn .data-row');
+            return Array.from(listItems).map(li => li.textContent.trim());
         }
 
         function addManualNumber() {
             const inputEl = document.getElementById('manualInput');
             const val = inputEl.value.trim();
             if (val !== '') {
-                addNumber(val);
+                currentInterimNodes = []; 
+                const list = document.getElementById('numberColumn');
+                const prev = list.querySelector('.highlight-row');
+                if(prev) prev.classList.remove('highlight-row');
+
+                const li = document.createElement('li');
+                li.className = 'data-row highlight-row';
+                li.textContent = val;
+                list.appendChild(li);
+
                 inputEl.value = '';
                 inputEl.focus();
+                setTimeout(() => {
+                    list.scrollTop = list.scrollHeight;
+                    li.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 50);
             }
-        }
-
-        function addNumber(numberStr) {
-            numbersData.push(numberStr);
-            
-            const list = document.getElementById('numberColumn');
-            
-            const previousHighlight = list.querySelector('.highlight-row');
-            if (previousHighlight) {
-                previousHighlight.classList.remove('highlight-row');
-            }
-
-            const li = document.createElement('li');
-            li.className = 'data-row highlight-row'; 
-            li.textContent = numberStr;
-            list.appendChild(li);
-
-            // Auto-scroll logic
-            setTimeout(() => {
-                list.scrollTop = list.scrollHeight;
-                li.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }, 50); 
         }
 
         function toggleListening() {
             if (!recognition && !initSpeechRecognition()) return;
-            if (isListening) stopListening();
-            else startListening();
+            if (isListening) stopListening(); else startListening();
         }
-
-        function startListening() {
-            try { recognition.start(); } catch(e) { console.error(e); }
-        }
-
-        function stopListening() {
-            isListening = false;
-            if (recognition) recognition.stop();
-            showStatus("تم الإيقاف.", "#0288D1");
-            updateUI();
-        }
-
-        function showErrorBox(msg) {
-            const box = document.getElementById('errorBox');
-            box.innerHTML = msg;
-            box.style.display = 'block';
-            document.getElementById('statusMessage').style.display = 'none';
-        }
+        function startListening() { try { recognition.start(); } catch(e) {} }
+        function stopListening() { isListening = false; if (recognition) recognition.stop(); showStatus("تم الإيقاف.", "#0288D1"); updateUI(); }
 
         function updateUI() {
             const btn = document.getElementById('toggleBtn');
             const text = document.getElementById('btnText');
             const icon = document.getElementById('micIcon');
-
             if (isListening) {
-                btn.classList.add('listening');
-                text.textContent = "إيقاف الإملاء";
-                icon.textContent = "⏹️";
+                btn.classList.add('listening'); text.textContent = "إيقاف الإملاء"; icon.textContent = "⏹️";
             } else {
-                btn.classList.remove('listening');
-                text.textContent = "بدء الإملاء";
-                icon.textContent = "🎙️";
+                btn.classList.remove('listening'); text.textContent = "بدء الإملاء"; icon.textContent = "🎙️";
             }
         }
 
         function clearData() {
-            numbersData = [];
             document.getElementById('numberColumn').innerHTML = '';
+            currentInterimNodes = []; currentResultIndex = -1;
             showStatus("تم مسح البيانات.", "#D32F2F");
         }
 
         function copyToExcel() {
-            if (numbersData.length === 0) {
-                showStatus("لا توجد بيانات للنسخ!", "red");
-                return;
-            }
-
-            const excelData = numbersData.join('\n');
+            const numbersData = getNumbersData();
+            if (numbersData.length === 0) { showStatus("لا توجد بيانات للنسخ!", "red"); return; }
             const textArea = document.createElement("textarea");
-            textArea.value = excelData;
+            textArea.value = numbersData.join('\n');
             textArea.style.position = "fixed";
             document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) showStatus("✅ تم النسخ بنجاح! الصق في Excel.", "#4CAF50");
-                else showStatus("❌ فشل النسخ.", "red");
-            } catch (err) {
-                showStatus("❌ خطأ في النسخ.", "red");
-            }
+            textArea.focus(); textArea.select();
+            try { document.execCommand('copy') ? showStatus("✅ تم النسخ!", "#4CAF50") : showStatus("❌ فشل النسخ.", "red"); } catch (err) {}
             document.body.removeChild(textArea);
         }
 
-        // NEW: Download Excel File Function
-        function downloadExcel() {
+        // --- EXCEL INTEGRATION LOGIC (SheetJS) ---
+        let loadedWorkbook = null;
+        let originalFileName = "Dictation_Numbers";
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Save original filename without extension
+            originalFileName = file.name.replace(/\.[^/.]+$/, "");
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    loadedWorkbook = XLSX.read(data, {type: 'array'});
+                    
+                    // Update Dropdown with Sheet Names
+                    const select = document.getElementById('sheetSelect');
+                    select.innerHTML = '';
+                    loadedWorkbook.SheetNames.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        select.appendChild(opt);
+                    });
+                    
+                    document.getElementById('fileStatus').textContent = `✅ تم رفع: ${file.name}`;
+                    document.getElementById('fileStatus').style.color = "#2E7D32";
+                    showStatus("تم قراءة ملف الإكسل بنجاح", "#2E7D32");
+                } catch (err) {
+                    showErrorBox("حدث خطأ أثناء قراءة ملف الإكسل.");
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportModifiedExcel() {
+            const numbersData = getNumbersData();
             if (numbersData.length === 0) {
                 showStatus("لا توجد بيانات لتحميلها!", "red");
                 return;
             }
 
-            // Create CSV content
-            // \uFEFF is the UTF-8 BOM, required for Excel to read Arabic text correctly
-            const bom = "\uFEFF";
-            const header = "الأرقام\n";
-            const csvContent = bom + header + numbersData.join("\n");
-            
-            // Create a Blob and a download link
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", "Dictation_Numbers.csv");
-            link.style.display = "none";
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showStatus("✅ تم تحميل ملف Excel بنجاح!", "#2E7D32");
+            // تحويل الأرقام المكتوبة كنصوص إلى أرقام حقيقية (Numbers) ليفهمها الإكسل كقيم حسابية
+            // SheetJS expects an array of arrays for injection: [[num1], [num2], ...]
+            const aoa = numbersData.map(num => [Number(num)]);
+            let startCell = document.getElementById('startCell').value.toUpperCase().trim() || "A1";
+
+            let wb;
+            if (loadedWorkbook) {
+                // استخدام الملف المرفوع
+                wb = loadedWorkbook;
+                const sheetName = document.getElementById('sheetSelect').value;
+                const ws = wb.Sheets[sheetName];
+                
+                // حقن البيانات ابتداءً من الخلية المحددة نزولاً
+                XLSX.utils.sheet_add_aoa(ws, aoa, {origin: startCell});
+            } else {
+                // إنشاء ملف جديد إذا لم يتم الرفع
+                wb = XLSX.utils.book_new();
+                // إضافة ترويسة إذا كان ملفاً جديداً
+                const ws = XLSX.utils.aoa_to_sheet([["الأرقام المُملتة"], ...aoa]);
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+            }
+
+            // توليد اسم الملف (الاسم + التاريخ + الوقت)
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+            const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-').slice(0, 5); // HH-MM
+            const finalFileName = `${originalFileName}_${dateStr}_${timeStr}.xlsx`;
+
+            // تصدير الملف
+            XLSX.writeFile(wb, finalFileName);
+            showStatus(`✅ تم تحميل: ${finalFileName}`, "#2E7D32");
         }
 
+        // --- Helpers ---
         function showStatus(message, color) {
             const statusEl = document.getElementById('statusMessage');
-            statusEl.textContent = message;
-            statusEl.style.color = color;
-            statusEl.style.opacity = 1;
-            statusEl.style.display = 'block';
-            document.getElementById('errorBox').style.display = 'none';
-
+            statusEl.textContent = message; statusEl.style.color = color;
+            statusEl.style.opacity = 1; document.getElementById('errorBox').style.display = 'none';
             clearTimeout(window.statusTimeout);
-            window.statusTimeout = setTimeout(() => {
-                statusEl.style.opacity = 0;
-            }, 4000);
+            window.statusTimeout = setTimeout(() => { statusEl.style.opacity = 0; }, 4000);
         }
 
-        window.onload = function() {
-            if (window.self !== window.top) {
-                const toggleBtn = document.getElementById('toggleBtn');
-                toggleBtn.disabled = true;
-                showErrorBox("⚠️ <b>تنبيه هام:</b> المتصفح يمنع استخدام الميكروفون داخل شاشة المعاينة هذه.<br><br>للتشغيل: قم بنسخ هذا الكود، واحفظه في ملف باسم <code>index.html</code> على جهازك، ثم افتحه بمتصفح Chrome لكي يعمل الإملاء الصوتي.");
-            } else {
-                showStatus("جاهز للبدء.", "#0288D1");
-            }
-        };
+        function showErrorBox(msg) {
+            const box = document.getElementById('errorBox');
+            box.innerHTML = msg; box.style.display = 'block';
+            document.getElementById('statusMessage').style.opacity = 0;
+        }
     </script>
 </body>
 </html>
