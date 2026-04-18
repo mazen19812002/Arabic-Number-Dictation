@@ -368,6 +368,40 @@
         }
         .row-insert:hover { transform: translateX(-50%) scale(1.3); }
 
+        /* --- Text/Number Switch --- */
+        .toggle-switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            width: 100%;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 2px solid #B3E5FC;
+            box-sizing: border-box;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input:checked + .slider { background-image: var(--btn-success-grad); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .toggle-label { font-size: 14px; font-weight: bold; color: #01579B; line-height: 1.2; }
+
         /* Status Messages */
         #statusMessage {
             text-align: center;
@@ -438,6 +472,16 @@
         <div class="layout-wrapper">
             <!-- Panel 1: Controls (Right) -->
             <div class="controls-panel">
+                
+                <!-- Text Mode Switch -->
+                <div class="toggle-switch-container">
+                    <label class="toggle-switch" title="تفعيل لإدخال نصوص وكلمات (عربي/إنجليزي) بجانب الأرقام">
+                        <input type="checkbox" id="allowTextSwitch">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">إدخال نصوص وكلمات (عربي/إنجليزي)</span>
+                </div>
+
                 <button class="btn-start" id="toggleBtn" onclick="toggleListening()">
                     <span class="btn-icon" id="micIcon">🎙️</span> 
                     <span id="btnText">بدء الإملاء</span>
@@ -469,6 +513,11 @@
                     <button class="btn-excel" onclick="exportModifiedExcel()" style="margin-top: 5px;">
                         <span class="btn-icon">📥</span> تحميل الإكسل
                     </button>
+                </div>
+
+                <div class="manual-input-box">
+                    <input type="text" id="manualInput" placeholder="إدخال يدوي..." onkeypress="if(event.key === 'Enter') addManualNumber()">
+                    <button onclick="addManualNumber()">إضافة</button>
                 </div>
 
                 <div style="display: flex; gap: 10px; width: 100%;">
@@ -817,7 +866,10 @@
 
             const sheetName = document.getElementById('sheetSelect').value;
             const ws = loadedWorkbook.Sheets[sheetName];
-            XLSX.utils.sheet_add_aoa(ws, [[Number(numberStr)]], {origin: cellRef});
+            
+            // التحقق إذا كان المدخل نصاً أو رقماً لتجنب خطأ NaN في الإكسل
+            const parsedVal = isNaN(numberStr) || numberStr.toString().trim() === "" ? numberStr : Number(numberStr);
+            XLSX.utils.sheet_add_aoa(ws, [[parsedVal]], {origin: cellRef});
 
             selectedExcelCell.r++;
             const nextCellRef = XLSX.utils.encode_cell(selectedExcelCell);
@@ -857,7 +909,10 @@
                 }
 
                 const transcript = event.results[current][0].transcript.trim();
-                const digitsArray = extractDigits(transcript);
+                const allowText = document.getElementById('allowTextSwitch').checked;
+                
+                // تحديد ما إذا كنا سنستخرج الأرقام فقط، أم سنأخذ النص كاملاً
+                const dataArray = allowText ? (transcript ? [transcript] : []) : extractDigits(transcript);
 
                 // 1. مسح الأرقام المؤقتة السابقة من الشاشة (لتحديث العرض الفوري)
                 interimCellRefs.forEach(ref => {
@@ -870,19 +925,19 @@
                 interimCellRefs = [];
 
                 if (event.results[current].isFinal) {
-                    // 2. إذا توقفت عن النطق (النتيجة النهائية)، نحفظ الرقم رسمياً
-                    digitsArray.forEach(num => addNumberLogic(num));
+                    // 2. إذا توقفت عن النطق (النتيجة النهائية)، نحفظ القيمة رسمياً
+                    dataArray.forEach(val => addNumberLogic(val));
                 } else {
-                    // 3. عرض الأرقام فوراً أثناء التحدث (Live Preview) بلون برتقالي
+                    // 3. عرض القيم فوراً أثناء التحدث (Live Preview) بلون برتقالي
                     let tempRow = selectedExcelCell.r;
                     let col = selectedExcelCell.c;
 
-                    digitsArray.forEach(num => {
+                    dataArray.forEach(val => {
                         ensureExcelRowExists(tempRow);
                         const cellRef = XLSX.utils.encode_cell({r: tempRow, c: col});
                         const targetTd = document.getElementById('cell-' + cellRef);
                         if (targetTd) {
-                            targetTd.textContent = num;
+                            targetTd.textContent = val;
                             targetTd.style.color = "#FF8F00"; // لون برتقالي يدل على الاستماع المستمر
                         }
                         interimCellRefs.push(cellRef);
